@@ -28,6 +28,7 @@
 		<li>Labels per quantity
 			<input type="numeric" name="numlabels" value="1" size="4"></li>
 	</ul>
+    <p>Price per unit <input type="numeric" name="unitprice" value="" size="8"> (e.g. per kg ) - leave this blank for unpriced labels</p>
 	<p>Total number of labels generated will be ((maxqty - minqty) / incqty) - 1) * numlabels, with a maximum of
 	14 labels per page.</p>
 	<p><button type="submit">MAKE IT!</button>

@@ -13,6 +13,7 @@ $minqty = $_GET['minqty'];
 $maxqty = $_GET['maxqty'];
 $incqty = $_GET['incqty'];
 $numlabels = $_GET['numlabels'];
+$unitprice = (float) $_GET['unitprice'];
 
 ?>
 <!DOCTYPE html>
@@ -77,6 +78,10 @@ table.main td {
 		$namestr = $pname . " (" . $qty . $qunit . ")";
 		$code = $codeprefix . sprintf("%05d", $qty);
 		$code = fix_ean_13($code);
+        # Calc price.
+        $price_pence = ($unitprice * ($qty / 1000.0)) * 100;
+        $price_pence = round($price_pence);
+        $price = sprintf("%.2f", ($price_pence / 100));
 ?>
 		<td>	
 			<div class="code"><img src="barcode.php?text=<?php echo $code ?>" width="240" height="30"></div>
@@ -86,6 +91,9 @@ table.main td {
 			<div class="pname"><?php 
 				echo htmlspecialchars($namestr)
 				?></div>
+            <?php if ($price > 0.01) { ?>
+                <div>&pound;<?php echo $price ?></div>
+            <?php } ?>
 		</td>
 <?php
 	$labelnum += 1;
