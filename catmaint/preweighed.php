@@ -24,9 +24,13 @@
 		<li>Increment size (units)
 			<input type="numeric" name="incqty" value="10" size="6"></li>
 		<li>Maximum quantity (units)
-			<input type="numeric" name="maxqty" value="200" size="6"></li>
+			<input type="numeric" name="maxqty" value="330" size="6"></li>
 		<li>Labels per quantity
 			<input type="numeric" name="numlabels" value="1" size="4"></li>
+        <li>Extra info
+            <input type="text" name="extra" size="60"> (Example: Best before: 23/8/2016)
+            (This is generated in smaller text on the label)
+        </li>
 	</ul>
     <p>Price per unit <input type="numeric" name="unitprice" value="" size="8"> (e.g. per kg ) - leave this blank for unpriced labels</p>
 	<p>Total number of labels generated will be ((maxqty - minqty) / incqty) - 1) * numlabels, with a maximum of
