@@ -37,7 +37,6 @@ table.main tr {
 	height: 14%;
 }
 table.main td {
-	border: 1px solid black;
 	padding: 0.5em;
 	padding-left: 2em;
 }
