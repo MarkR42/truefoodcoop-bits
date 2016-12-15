@@ -46,7 +46,7 @@ function get_all_valid_product_codes($supplier)
     $st = $dbh->prepare($sql);
     # Ends with ;; then supplier code
     $q = '%;;' . $supplier;
-    $st->execute( [ $q ] );
+    $st->execute( Array( $q ) );
     
     $valid_codes = Array();
     foreach ($st->fetchAll() as $row) {

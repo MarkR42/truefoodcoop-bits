@@ -31,13 +31,13 @@ function do_product_search($q) {
     $q = trim($q); # Remove whitespace begin / end
     if ($q == '') {
         # Query is now empty.
-        return [];
+        return Array();
     }
     # Exact match, product ref
     $sql = "SELECT id, reference, name from products WHERE " .
         " reference=?";
     $st = $dbh->prepare($sql);
-    $st->execute( [ $q ] );
+    $st->execute( Array( $q ) );
     $res = $st->fetchAll();
     if (count($res) > 0) {
         return $res;
@@ -50,7 +50,7 @@ function do_product_search($q) {
         " NAME LIKE ? OR reference LIKE ? ORDER BY reference";
     $st = $dbh->prepare($sql);
     $like_str = '%' . $q . '%'; # Substring match using SQL LIKE
-    $st->execute( [ $like_str, $like_str ] );
+    $st->execute( Array( $like_str, $like_str ) );
     return $st->fetchAll();
 }
 
@@ -60,10 +60,10 @@ function do_zero_product($product_id)
     $location = '0'; # General Warehouse.
     # Update the current stock level 
     $st = $dbh->prepare("UPDATE stockcurrent SET UNITS=0 WHERE location=? AND product=?");
-    $st->execute( [$location, $product_id] );
+    $st->execute( Array($location, $product_id) );
     # Delete every stock movement (stockdiary) for this product.
     $st = $dbh->prepare("DELETE FROM stockdiary WHERE location=? AND product=?");
-    $st->execute( [$location, $product_id] );
+    $st->execute( Array($location, $product_id) );
     show_message("PRODUCT ZEROED"); 
     exit();
 }
@@ -74,20 +74,20 @@ function do_delete_product($product_id)
     
     # Remove from products_cat
     $st = $dbh->prepare("DELETE FROM products_cat WHERE product=?");
-    $st->execute( [$product_id] );
+    $st->execute( Array($product_id) );
     # Stock tables:
     $st = $dbh->prepare("DELETE FROM stockcurrent WHERE product=?");
-    $st->execute( [$product_id] );
+    $st->execute( Array($product_id) );
     $st = $dbh->prepare("DELETE FROM stockdiary WHERE product=?");
-    $st->execute( [$product_id] );
+    $st->execute( Array($product_id) );
     $st = $dbh->prepare("DELETE FROM stocklevel WHERE product=?");
-    $st->execute( [$product_id] );
+    $st->execute( Array($product_id) );
     # Ticketlines: change to null.
     $st = $dbh->prepare("UPDATE ticketlines SET product=NULL where product=?");
-    $st->execute( [$product_id] );
+    $st->execute( Array($product_id) );
     # Master product table.
     $st = $dbh->prepare("DELETE FROM products WHERE id=?");
-    $st->execute( [$product_id] );
+    $st->execute( Array($product_id) );
     show_message("PRODUCT DELETED"); 
     exit();
 }

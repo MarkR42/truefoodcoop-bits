@@ -6,9 +6,9 @@ if (isset($_POST['host'])) {
     // Form POST.
     // Assemble the cookie.
     $cookval = implode(':', 
-        [   $_POST['host'], $_POST['database'], 
+        Array(   $_POST['host'], $_POST['database'], 
             $_POST['username'], $_POST['password']
-        ]);
+        ));
     setcookie(TFC_COOKIE, $cookval);
     // Redirect back to the home page, hopefully it will be ok.
     header("Location: index.php"); 
