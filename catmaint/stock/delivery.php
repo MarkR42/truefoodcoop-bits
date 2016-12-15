@@ -40,6 +40,7 @@ function get_all_valid_product_codes($supplier)
     # 3035;;INF                | Millet Flour gluten free 500g        
     # This function returns a dictionary of valid product codes
     # mapped to the value 1
+    # Codes will be mapped to upper case (if they contain letters)
     global $dbh;
     $sql = "SELECT reference from products WHERE " .
         " reference like ?";
@@ -53,7 +54,7 @@ function get_all_valid_product_codes($supplier)
         $reference = $row[0];
         # Strip off everything after ;
         $bits = explode(';', $reference);
-        $code = strtolower($bits[0]);
+        $code = strtoupper($bits[0]);
         $valid_codes[$code] = 1;
     }
     return $valid_codes;
@@ -78,6 +79,26 @@ function array_highest_index($a)
     }
     return $highest_index;
 }
+
+function find_column_by_name(& $sheet, $name_list) 
+{
+    # Search for column headings from $name_list.
+    # The first one found, will be returned.
+    # If several appear on the same row, they will be
+    # searched in order. So put $name_list in priority order.
+    # Names are not case sensitive. $name_list must be in lower case.
+    foreach ($sheet as $row) {
+        $row_lc = array_map("strtolower", $row);
+        $row_lc = array_map("trim", $row_lc);
+        foreach ($name_list as $name) {
+            $pos = array_search($name, $row_lc);
+            if ($pos !== FALSE) {
+                return $pos;
+            }
+        }
+    }
+    return FALSE; # Not found.
+} 
 
 function do_process_stock()
 {
@@ -107,24 +128,61 @@ function do_process_stock()
     # Scan the sheet to find various things.
     $box_qtys_by_column = Array();
     $widest_columns_by_column = Array();
+    $valid_codes_by_column = Array();
     foreach ($sheet as $row) {
         for ($i=0; $i < count($row); $i++) {
             if (parse_box_qty($row[$i])) {
                 @ $box_qtys_by_column[$i] += 1;
             }
+            if (isset($valid_codes[$row[$i]])) {
+                @ $valid_codes_by_column[$i] += 1;
+            } 
         }
         $widths = array_map("strlen", $row);
         $widest_index = array_highest_index($widths);
         @ $widest_columns_by_column[$widest_index] += 1;
     }
-    $column_box_qty = array_highest_index($box_qtys_by_column);
-    error_log("Box quantity column is " . $column_box_qty);
+    $column_box_quantity = array_highest_index($box_qtys_by_column);
+    error_log("Box quantity column is " . $column_box_quantity);
     $column_name = array_highest_index($widest_columns_by_column);
     error_log("Name column is " . $column_name);
+    $column_product_code = array_highest_index($valid_codes_by_column);
+    error_log("Product code column is " . $column_product_code);
+    # Find quantity column.
+    $column_quantity = find_column_by_name($sheet,
+        Array('quantity picked', 'quantity', 'qty') );
+    error_log("Quantity column is " . $column_quantity);
+    # Build a data structure:
+    # Array of: Arrays, elements:
+    #   product_code
+    #   box_quantity
+    #   quantity
+    #   name
+    $delivery_data = Array();
+    foreach ($sheet as $row) {
+        $product_code = $row[$column_product_code];
+        $box_quantity = $row[$column_box_quantity];
+        $quantity = (int) $row[$column_box_quantity];
+        $name = $row[$column_name];
+        # Check that quantity is greater than zero
+        if ($quantity > 0) {
+            $delivery_data[] = Array(
+                'product_code' => trim((string) $product_code),
+                'box_quantity' => trim((string) $box_quantity),
+                'quantity' => $quantity, # Might be not integer.
+                'name' => trim($name)
+            );
+        }
+    }
+    
+    $tmpfname = tempnam(sys_get_temp_dir(), 'tfc');
+    $f = fopen($tmpfname, "w");
+    if (! $f) { throw Exception("Unable to write temp file"); }
+    fwrite($f, serialize($delivery_data));
+    fclose($f);
     
     
-    
-    echo("OK SO FAR"); exit(1);
+    echo("OK SO FAR: " . $tmpfname); exit(1);
 }
 
 ?>
