@@ -92,7 +92,7 @@ input[type=number] {
                         <?php if ($error) { ?>
                             <div style="color: red">
                                 <?php echo htmlspecialchars($error) ?>
-                                <a href="check_product.php?code=<?php echo urlencode($prod_reference) ?>&amp;name=<?php echo urlencode($row['name']) ?>">CHECK PRODUCT</a>
+                                <a href="check_product.php?code=<?php echo urlencode($prod_reference) ?>&amp;name=<?php echo urlencode($row['name']) ?>&amp;size=<?php echo urlencode($row['box_quantity_str']) ?>">CHECK PRODUCT</a>
                             </div>
                         <?php } ?>
                     </td>

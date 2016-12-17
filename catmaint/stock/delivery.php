@@ -180,6 +180,7 @@ function do_process_stock()
             $delivery_data[] = Array(
                 'product_code' => $product_code,
                 'box_quantity' => trim((string) $box_quantity),
+                'box_quantity_str' => $row[$column_box_quantity],
                 'quantity' => $quantity, # Might be not integer.
                 'name' => trim($name),
                 'error' => $error
