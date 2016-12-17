@@ -6,7 +6,12 @@ require('SpreadsheetReader.php');
 $dbh = init_db_connection();
 
 if (isset($_POST['process'])) {
-    do_process_stock();
+    $delivery_data = do_process_stock();
+    require('delivery.summary.inc.php');
+    
+} else {
+    // Show form.
+    require('delivery.form.inc.php');
 }
 
 function parse_box_qty($str) {
@@ -161,16 +166,23 @@ function do_process_stock()
     $delivery_data = Array();
     foreach ($sheet as $row) {
         $product_code = $row[$column_product_code];
-        $box_quantity = $row[$column_box_quantity];
-        $quantity = (int) $row[$column_box_quantity];
+        $product_code = trim((string) $product_code);
+        $box_quantity = parse_box_qty($row[$column_box_quantity]);
+        $quantity = (float) $row[$column_quantity];
         $name = $row[$column_name];
         # Check that quantity is greater than zero
         if ($quantity > 0) {
+            $error = FALSE;
+            if (! isset($valid_codes[$product_code] )) {
+                $error = "Product not found in database!";
+            }
+            
             $delivery_data[] = Array(
-                'product_code' => trim((string) $product_code),
+                'product_code' => $product_code,
                 'box_quantity' => trim((string) $box_quantity),
                 'quantity' => $quantity, # Might be not integer.
-                'name' => trim($name)
+                'name' => trim($name),
+                'error' => $error
             );
         }
     }
@@ -182,34 +194,8 @@ function do_process_stock()
     fclose($f);
     
     
-    echo("OK SO FAR: " . $tmpfname); exit(1);
+    return $delivery_data;
 }
 
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-<title>TFC Stock- Process Delivery</title>
-</head>
-<body>
-<h1>TFC Stock- Process Delivery</h1>
-<p>This page will process a delivery note.</p>
-<!--
 
-
--->
-<form METHOD="POST" enctype="multipart/form-data">
-    <input type="hidden" name="dog" value="Spacey">
-    <p>
-        Supplier code <input size="5" maxlength="5" name="supplier" value="INF"> (generally 3 letters)
-    </p>
-    <p>
-        File <input type="file" name="file"> - must be in 
-            XLSX or HTML format.
-    </p>
-
-    <button  type="submit" name="process" value="YES">YES</button>
-</form>
-<p><a href="./">Back to menu</a></p>
-    
-</body>
