@@ -22,6 +22,10 @@ $unknown_code = $_GET['code'];
 $unknown_name = $_GET['name'];
 $unknown_size = $_GET['size']; #  Contains human-readable quantity.
 
+if (isset($_POST['set_reference'])) {
+    do_set_reference();
+}
+
 $similar_products = find_similar_products($unknown_name);
 
 function find_similar_products($name)
@@ -46,6 +50,21 @@ function find_similar_products($name)
     return $res;
 }
 
+function do_set_reference()
+{
+    global $dbh;
+    check_post_token();
+
+    $product_id = $_POST['select'];
+    if (! $product_id) {
+        throw Exception("Missing or falsy product_id");
+    }
+    $new_reference = $_POST['new_reference'];
+    $st = $dbh->prepare("UPDATE products set REFERENCE=? WHERE ID=?");
+    $st->execute(Array($new_reference, $product_id));
+    header("Location: ./");
+    exit(0);
+}
 
 ?>
 
@@ -60,6 +79,9 @@ function find_similar_products($name)
 <h2>Product code: <?php echo htmlspecialchars($unknown_code); ?></h2>
 <p>Size: <?php echo htmlspecialchars($unknown_size); ?> </p>
 <h2>Similar products:</h2>
+<form method="POST">
+<input type="hidden" name="dog" value="Spacey">
+<input type="hidden" name="new_reference" value="<?php echo htmlspecialchars($unknown_code); ?>">
 <table>
     <thead>
         <tr>
@@ -74,7 +96,12 @@ function find_similar_products($name)
         foreach ($similar_products as $row) {
     ?>
         <tr>
-            <td><?php echo htmlspecialchars($row['reference']) ?></td>
+            <td>
+                <label>
+                    <input type="radio" name="select" value="<?php echo htmlspecialchars($row['id']) ?>">
+                <?php echo htmlspecialchars($row['reference']) ?>
+                </label>
+                </td>
             <td><?php echo htmlspecialchars($row['catname']) ?></td>
             <td><?php echo htmlspecialchars($row['code']) ?></td>
             <td><?php echo htmlspecialchars($row['name']) ?></td>
@@ -84,5 +111,12 @@ function find_similar_products($name)
     ?>
     </tbody>
 </table>
+<p>
+    <button type="submit" name="set_reference">SET REFERENCE for selected product</button>
+        This will CHANGE the reference for the selected item in the catalogue, to match
+        the reference shown above (<?php echo htmlspecialchars($unknown_code); ?> ). If
+        this is obviously correct, then you can use this button, otherwise, do not.
+</p>
+</form>
 
 <p><a href="./">Back to menu</a></p>
