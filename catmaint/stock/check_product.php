@@ -34,18 +34,28 @@ function find_similar_products($name)
     # Keep chopping off bits from the end of $name until we
     # find something.
     $name_trunc = $name;
+    $name_start_trunc = $name;
+    $sql = "SELECT p.id, c.name AS catname, p.reference, p.code, p.name from products AS p " .
+        " INNER JOIN categories AS c on p.CATEGORY = c.ID WHERE " .
+        " p.name LIKE ? ORDER BY reference";
     while (strlen($name_trunc) > 4) { 
-        $sql = "SELECT p.id, c.name AS catname, p.reference, p.code, p.name from products AS p " .
-            " INNER JOIN categories AS c on p.CATEGORY = c.ID WHERE " .
-            " p.name LIKE ? ORDER BY reference";
-        $st = $dbh->prepare($sql);
-        $q = '%' . $name_trunc . '%';
-        $st->execute( Array( $q ) );
-        $res = $st->fetchAll();
+        $names_to_try = Array($name_trunc, $name_start_trunc);
+
+        foreach ($names_to_try as $try_name) {
+            $st = $dbh->prepare($sql);
+            $q = '%' . $try_name . '%';
+            $st->execute( Array( $q ) );
+            $res = $st->fetchAll();
+            if (count($res) > 0) {
+                break;
+            }
+        }
         if (count($res) > 0) {
             break;
         }
+        
         $name_trunc = substr($name_trunc, 0, strlen($name_trunc) - 1);
+        $name_start_trunc = substr($name_start_trunc, 1);
     }
     return $res;
 }
