@@ -1,6 +1,7 @@
 <?php
 
 require('db_inc.php');
+require('html_table_reader_inc.php');
 require('SpreadsheetReader.php');
 
 $dbh = init_db_connection();
@@ -132,7 +133,14 @@ function do_process_stock()
     $fileinfo = $_FILES['file'];
     error_log("fileinfo name=" . $fileinfo['name']);
     error_log("fileinfo tmp_name=" . $fileinfo['tmp_name']);
-    $ssreader = new SpreadsheetReader($fileinfo['tmp_name'], $fileinfo['name']);
+    
+    $is_html = (strpos(strtolower($fileinfo['name']), '.htm') != -1);
+    
+    if ($is_html) {
+        $ssreader = read_html_table($fileinfo['tmp_name']);
+    } else {
+        $ssreader = new SpreadsheetReader($fileinfo['tmp_name'], $fileinfo['name']);
+    }
     $sheet = Array();
     foreach ($ssreader as $row) {
         # Check the number of columns. Minimum will be 4
