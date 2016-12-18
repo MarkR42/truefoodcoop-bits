@@ -48,3 +48,20 @@ CREATE TABLE tfc_special_stock_rules (
     take_stock_from_reference varchar(255), -- "Consume" stock from this product
     take_stock_quantity INTEGER -- "Consume" this many units of stock from the other product.
 );
+
+====
+SOYA MILKS 12/12/2016
+
+select id, reference, code, pricesell, name from products where name like '%soya%' and reference like '%inf%' and (code like '%24_' or code like '%15_') order by code;
++--------------------------------------+----------------+---------------+-----------+-------------------------------------+
+| id                                   | reference      | code          | pricesell | name                                |
++--------------------------------------+----------------+---------------+-----------+-------------------------------------+
+| 1a24bde4-ea6d-46a0-afa3-59cfe5286850 | 724805;;INF    | 3273227080156 |      1.54 | Soya milk - green - unsweetened 1L  |
+| 8f05eec3-01b1-4af9-894b-6ba6bf860c05 | old724610;;INF | 3273227080248 |      1.45 | Soya milk with Calcium 1litre       |
+| aeb9aaca-52a7-4f09-af4d-bb2efabde42a | 724605;;INF    | 3273229480152 |      8.05 | Soya - green - 6x1ltr               |
+| 487de863-c796-4b4e-9b25-b6c9c2a00c6e | 724610;;INF    | 3273229480244 |      9.35 | Soya (blue) 6x1ltr                  |
+| XX ignore the soya beans
++--------------------------------------+----------------+---------------+-----------+-------------------------------------+
+5 rows in set (0.01 sec)
+
+

@@ -103,12 +103,30 @@ function find_column_by_name(& $sheet, $name_list)
         }
     }
     return FALSE; # Not found.
-} 
+}
+
+function read_box_quantity_override($reference)
+{
+    # Check if we have a box quantity override for this product,
+    # and return it, or FALSE otherwise.
+    global $dbh;
+    $sql = "SELECT override_box_quantity from tfc_special_stock_rules WHERE " .
+        " reference =? AND override_box_quantity IS NOT NULL";
+    $st = $dbh->prepare($sql);
+    $st->execute(Array($reference));
+    $rows = $st->fetchAll();
+    if (count($rows) > 0) {
+        return $rows[0][0];
+    } else {
+        return FALSE;
+    }
+}
 
 function do_process_stock()
 {
     check_post_token();
-    $valid_codes = get_all_valid_product_codes($_POST['supplier']);
+    $supplier = $_POST['supplier'];
+    $valid_codes = get_all_valid_product_codes($supplier);
     error_log("Number of valid codes=" . count($valid_codes));
     
     $fileinfo = $_FILES['file'];
@@ -168,6 +186,11 @@ function do_process_stock()
         $product_code = $row[$column_product_code];
         $product_code = trim((string) $product_code);
         $box_quantity = parse_box_qty($row[$column_box_quantity]);
+        $reference = $product_code . ';;' . $supplier;
+        $box_quantity_override = read_box_quantity_override($reference);
+        if ($box_quantity_override) {
+            $box_quantity = $box_quantity_override;
+        }
         $quantity = (float) $row[$column_quantity];
         $name = $row[$column_name];
         # Check that quantity is greater than zero
