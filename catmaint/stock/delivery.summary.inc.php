@@ -45,7 +45,7 @@ input[type=number] {
 <body>
 <h1>TFC Stock- Delivery Summary</h1>
 
-<form METHOD="POST" enctype="multipart/form-data">
+<form METHOD="POST">
     <input type="hidden" name="dog" value="Spacey">
     <p>
         Supplier code <input size="5" maxlength="5" name="supplier" value="<?php echo htmlspecialchars($supplier) ?>">
@@ -83,6 +83,7 @@ input[type=number] {
                         ?>
                             <input type="number" name="<?php echo htmlspecialchars($prod_reference) ?>"
                                 value="<?php echo $total_qty ?>"
+                                step="0.01"
                                 >
                         <?php
                             }

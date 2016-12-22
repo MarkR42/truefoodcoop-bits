@@ -43,6 +43,12 @@ function init_db_connection()
         header("Location: db_params.php?errmsg=" . urlencode($errmsg));
         exit(0);
     }
+    // Create table for the log
+    $dbh->exec("
+        CREATE TABLE IF NOT EXISTS tfc_log ( id integer not null primary key auto_increment,  
+            ts datetime not null,
+            message varchar(1024) NOT NULL
+            )");
     return $dbh;
 }
 
@@ -58,4 +64,11 @@ function show_message($msg) {
     echo("<p>" . htmlspecialchars($msg) . "</p>");
     echo('<p><a href="./">Product maintenance</a></p>');
 }
+
+function tfc_log_to_db($dbh, $msg) {
+    $dbh->prepare("INSERT INTO tfc_log(ts, message) VALUES (NOW(), ?)")
+        ->execute(Array($msg));
+}
+
+
 ?>

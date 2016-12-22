@@ -9,7 +9,10 @@ $dbh = init_db_connection();
 if (isset($_POST['process'])) {
     $delivery_data = do_process_stock();
     require('delivery.summary.inc.php');
-    
+
+} elseif (isset($_POST['update'])) {
+    $update_data = do_process_update();
+    require('delivery.updated.inc.php');
 } else {
     // Show form.
     require('delivery.form.inc.php');
@@ -125,14 +128,14 @@ function read_box_quantity_override($reference)
 
 function do_process_stock()
 {
+    global $dbh;
     check_post_token();
     $supplier = $_POST['supplier'];
     $valid_codes = get_all_valid_product_codes($supplier);
-    error_log("Number of valid codes=" . count($valid_codes));
+    # error_log("Number of valid codes=" . count($valid_codes));
     
     $fileinfo = $_FILES['file'];
-    error_log("fileinfo name=" . $fileinfo['name']);
-    error_log("fileinfo tmp_name=" . $fileinfo['tmp_name']);
+    tfc_log_to_db($dbh, "delivery: filename=" . $fileinfo['name']);
     
     $is_html = (strpos(strtolower($fileinfo['name']), '.htm') != -1);
     
@@ -174,11 +177,11 @@ function do_process_stock()
         @ $widest_columns_by_column[$widest_index] += 1;
     }
     $column_box_quantity = array_highest_index($box_qtys_by_column);
-    error_log("Box quantity column is " . $column_box_quantity);
+    tfc_log_to_db($dbh, "Box quantity column is " . $column_box_quantity);
     $column_name = array_highest_index($widest_columns_by_column);
-    error_log("Name column is " . $column_name);
+    tfc_log_to_db($dbh, "Name column is " . $column_name);
     $column_product_code = array_highest_index($valid_codes_by_column);
-    error_log("Product code column is " . $column_product_code);
+    tfc_log_to_db($dbh, "Product code column is " . $column_product_code);
     # Find quantity column.
     $column_quantity = find_column_by_name($sheet,
         Array('quantity picked', 'quantity', 'qty') );
@@ -229,5 +232,60 @@ function do_process_stock()
     return $delivery_data;
 }
 
+function get_product_id_by_reference($reference) 
+{
+    global $dbh;
+    $sql = "SELECT id from products WHERE " .
+        " reference = ?";
+    $sth = $dbh->prepare($sql);
+    $sth-> execute(Array($reference));
+    $row = $sth->fetch();
+    if ($row === FALSE) {
+        # Problem
+        throw Exception("Product not found while updating " . $reference);
+    }
+    return $row[0];
+}
+
+function do_process_update()
+{
+    /*
+     * User pressed button. Actually do the stock update. 
+     */
+    global $dbh;
+    check_post_token();
+    # iterate through the POST keys. If they contain a ; then they must
+    # be product codes.
+    $amounts_to_update = Array(); # Array of arrays (product_code, product_id, qty)
+    foreach ($_POST as $key => $value) {
+        if (strpos($key, ';') !== FALSE) {
+            # Product code, from "reference" column.
+            $product_id = get_product_id_by_reference($key);
+            $qty = (float) $value;
+            if ($qty > 0) {
+                $amounts_to_update[] = Array($key, $product_id, $qty);
+                tfc_log_to_db($dbh, "Found product: $key adding stock: $qty");
+            }
+        }
+    }
+    $location = '0'; # Stock location ID, from locations table.
+    tfc_log_to_db($dbh, "Updating stocks...");
+    $dbh->beginTransaction();
+    foreach ($amounts_to_update as $amount) {
+        list ($product_code, $product_id, $qty) = $amount;
+        # Update the stock
+        $dbh->prepare("UPDATE stockcurrent SET units = units + ? " .
+            " WHERE product=? AND location = ?")
+            ->execute(Array($qty, $product_id, $location));
+        # Create stock movement in diary.
+        $dbh->prepare("INSERT INTO stockdiary (ID, datenew, reason, " .
+            " location, product, units, price) VALUES (uuid(), NOW(),?,?,?,?,0)")
+            ->execute(Array( 1, # Reason 1 = incoming
+                $location, $product_id, $qty));
+    }
+    tfc_log_to_db($dbh, "Stock update complete.");
+    $dbh->commit();
+    return $amounts_to_update;
+}
 ?>
 

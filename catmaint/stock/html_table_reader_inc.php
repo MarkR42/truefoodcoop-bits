@@ -25,7 +25,7 @@ function read_html_table($filename)
     $rows = Array();
     foreach ($tr_elems as $tr) {
         # Get child elements, ignore anything which is not 
-        # a td or th.
+        # an element.
         $row = Array();
         foreach ($tr->childNodes as $node) {
             if ($node->nodeType == XML_ELEMENT_NODE) {
