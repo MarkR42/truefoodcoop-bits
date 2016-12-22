@@ -58,6 +58,7 @@ input[type=number] {
                     <div>(supplier's)</div>
                     
                 </th>
+                <th>case x size</th>
                 <th>Box size</th>
                 <th><div>Quantity</div> 
                     <div>(of boxes)</div></th>
@@ -75,6 +76,7 @@ input[type=number] {
             ?>
                 <tr <?php if ($error) { echo 'class="error" '; } ?> >
                     <td><?php echo htmlspecialchars($row['product_code']) ?></td>
+                    <td class="numeric"><?php echo htmlspecialchars($row['box_quantity_str']) ?></td>
                     <td class="numeric"><?php echo $row['box_quantity'] ?></td>
                     <td class="numeric"><?php echo $row['quantity'] ?></td>
                     <td>

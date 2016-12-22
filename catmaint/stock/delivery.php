@@ -137,7 +137,7 @@ function do_process_stock()
     $fileinfo = $_FILES['file'];
     tfc_log_to_db($dbh, "delivery: filename=" . $fileinfo['name']);
     
-    $is_html = (strpos(strtolower($fileinfo['name']), '.htm') != -1);
+    $is_html = (strpos(strtolower($fileinfo['name']), '.htm') !== FALSE);
     
     if ($is_html) {
         $ssreader = read_html_table($fileinfo['tmp_name']);
@@ -185,7 +185,7 @@ function do_process_stock()
     # Find quantity column.
     $column_quantity = find_column_by_name($sheet,
         Array('quantity picked', 'quantity', 'qty') );
-    error_log("Quantity column is " . $column_quantity);
+    tfc_log_to_db($dbh, "Quantity column is " . $column_quantity);
     # Build a data structure:
     # Array of: Arrays, elements:
     #   product_code
@@ -279,9 +279,10 @@ function do_process_update()
             ->execute(Array($qty, $product_id, $location));
         # Create stock movement in diary.
         $dbh->prepare("INSERT INTO stockdiary (ID, datenew, reason, " .
-            " location, product, units, price) VALUES (uuid(), NOW(),?,?,?,?,0)")
+            " location, product, units, price) VALUES (uuid(), NOW(),?,?,?,?, ".
+            " (select pricebuy from products where id=?) )")
             ->execute(Array( 1, # Reason 1 = incoming
-                $location, $product_id, $qty));
+                $location, $product_id, $qty, $product_id));
     }
     tfc_log_to_db($dbh, "Stock update complete.");
     $dbh->commit();
