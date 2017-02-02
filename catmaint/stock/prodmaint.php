@@ -10,14 +10,21 @@ $results = null;
 if (isset($_POST['action'])) {
     check_post_token();
     $action = $_POST['action'];
-    $product_id = $_POST['product_id'];
-    if ($action == 'zero') {
-        do_zero_product($product_id);
-    } elseif ($action == 'delete') {
-        do_delete_product($product_id);
-    } else {
-        throw Exception("Unknown action " . $action);
+    $product_ids = $_POST['product_ids'];
+    $count = 0;
+    foreach ($product_ids as $product_id) {
+        $count += 1;
+        if ($action == 'zero') {
+            do_zero_product($product_id);
+            $message = 'PRODUCTS ZEROED';
+        } elseif ($action == 'delete') {
+            do_delete_product($product_id);
+            $message = 'PRODUCTS DELETED';
+        } else {
+            throw Exception("Unknown action " . $action);
+        }
     }
+    show_message("$count $message"); exit();
 }
 
 if (isset($_GET['q'])) {
@@ -46,8 +53,9 @@ function do_product_search($q) {
     # Substring on name or reference.
     
     # Search for a substring match on the product name.
-    $sql = "SELECT id, reference, name from products WHERE " .
-        " NAME LIKE ? OR reference LIKE ? ORDER BY reference";
+    $sql = "SELECT p.id, p.reference, p.name, c.name AS catname from products AS p " .
+        " inner join categories c on p.category = c.id WHERE " .
+        " p.NAME LIKE ? OR p.reference LIKE ? ORDER BY p.reference";
     $st = $dbh->prepare($sql);
     $like_str = '%' . $q . '%'; # Substring match using SQL LIKE
     $st->execute( Array( $like_str, $like_str ) );
@@ -64,8 +72,6 @@ function do_zero_product($product_id)
     # Delete every stock movement (stockdiary) for this product.
     $st = $dbh->prepare("DELETE FROM stockdiary WHERE location=? AND product=?");
     $st->execute( Array($location, $product_id) );
-    show_message("PRODUCT ZEROED"); 
-    exit();
 }
 
 function do_delete_product($product_id)
@@ -88,8 +94,6 @@ function do_delete_product($product_id)
     # Master product table.
     $st = $dbh->prepare("DELETE FROM products WHERE id=?");
     $st->execute( Array($product_id) );
-    show_message("PRODUCT DELETED"); 
-    exit();
 }
 
 ?>
@@ -121,6 +125,7 @@ if (isset($results)) {
         </tr>
         <tr>
             <th>Reference</th>
+            <th>Category</th>
             <th>Name</th>
         </tr>
     </thead>
@@ -131,11 +136,12 @@ if (isset($results)) {
     <tr>
         <td>
             <label>
-                <input type="radio" name="product_id" 
+                <input type="checkbox" name="product_ids[]" 
                     value="<?php echo htmlspecialchars($product['id']) ?>">
                 <?php echo htmlspecialchars($product['reference']) ?>
             </label>
             </td>
+        <td><?php echo htmlspecialchars($product['catname']) ?></td>
         <td><?php echo htmlspecialchars($product['name']) ?></td>
     
     </tr>
@@ -147,8 +153,8 @@ if (isset($results)) {
     if (count($results) > 0) {
 ?>
 <p>
-    <button type="submit" name="action" value="zero">ZERO PRODUCT STOCK</button>
-    <button type="submit" name="action" value="delete">DELETE PRODUCT</button>
+    <button type="submit" name="action" value="zero">ZERO PRODUCTS' STOCK</button>
+    <button type="submit" name="action" value="delete">DELETE PRODUCTS</button>
 </p>
 <?php
     }
