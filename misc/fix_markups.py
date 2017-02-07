@@ -54,6 +54,11 @@ def main():
         # Remove our nominalMarkup value - which means the reprice script
         # will need to reset it to the default (correct) value next time.
         attributes2 = re.sub(r'nominalMarkup=[0-9.]+;+', '', attributes2)
+        # Add correct markup
+        if attributes2.startswith(';'):
+            attributes2 = attributes2[1:]
+        attributes2 = 'nominalMarkup=0.35;' + attributes2
+        
         if attributes2 != attributes:
             info = "reference={}, name={}".format( prod_reference, prod_name)
             print(info, file=oldf)
