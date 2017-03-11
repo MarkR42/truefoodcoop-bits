@@ -18,7 +18,12 @@ if in doubt, please check with the shop manager or buyer.</p>
     Take a supplier's delivery note, and add the stock listed.
     Needs a file upload.
 </p>
+<p><a href="priceupdate.php">Prices updater</a>
+    Read a spreadsheet of supplier prices to update the prices
+    in our system.
+</p>
 <hr />
+<h2>Seldom needed</h2>
 <p><a href="prodmaint.php">Product maintenance</a>
     Find a product and delete its stock or the whole product.
 </p>

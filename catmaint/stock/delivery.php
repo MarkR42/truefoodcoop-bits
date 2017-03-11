@@ -3,6 +3,7 @@
 require('db_inc.php');
 require('html_table_reader_inc.php');
 require('SpreadsheetReader.php');
+require('common_utils.php');
 
 $dbh = init_db_connection();
 
@@ -18,114 +19,6 @@ if (isset($_POST['process'])) {
     require('delivery.form.inc.php');
 }
 
-function parse_box_qty($str) {
-    # Examples:
-    # 10kg
-    # 25kg
-    # 16.25kg
-    # 10x250g
-    # 10 x 250g
-    # 10 X 250g
-    
-    $str = strtolower($str);
-    # remove all whitespace, even internal.
-    $str = str_replace(' ', '', $str);
-    list($boxqty, $itemsize) = sscanf($str, '%fx%f');
-    if (isset($itemsize)) {
-        return $boxqty;
-    }
-    
-    list($boxqty) = sscanf($str, '%fkg');
-    $minus2 = substr($str, strlen($str) - 2);
-    if (isset($boxqty) && ($minus2 == 'kg')) {
-        return $boxqty;
-    }
-    return FALSE;
-}
-
-function get_all_valid_product_codes($supplier) 
-{
-    # Our product reference is e.g.
-    # 3035;;INF                | Millet Flour gluten free 500g        
-    # This function returns a dictionary of valid product codes
-    # mapped to the value 1
-    # Codes will be mapped to upper case (if they contain letters)
-    global $dbh;
-    $sql = "SELECT reference from products WHERE " .
-        " reference like ?";
-    $st = $dbh->prepare($sql);
-    # Ends with ;; then supplier code
-    $q = '%;;' . $supplier;
-    $st->execute( Array( $q ) );
-    
-    $valid_codes = Array();
-    foreach ($st->fetchAll() as $row) {
-        $reference = $row[0];
-        # Strip off everything after ;
-        $bits = explode(';', $reference);
-        $code = strtoupper($bits[0]);
-        $valid_codes[$code] = 1;
-    }
-    return $valid_codes;
-}
-
-function log_and_return($str)
-{
-    error_log($str);
-    return $str;
-}
-
-function array_highest_index($a)
-{
-    $highest = -100000;
-    $highest_index = FALSE;
-    
-    foreach ($a as $k => $v) {
-        if ($v > $highest) {
-            $highest_index = $k;
-            $highest = $v;
-        }
-    }
-    return $highest_index;
-}
-
-function find_column_by_name(& $sheet, $name_list) 
-{
-    # Search for column headings from $name_list.
-    # The first one found, will be returned.
-    # If several appear on the same row, they will be
-    # searched in order. So put $name_list in priority order.
-    # Names are not case sensitive. $name_list must be in lower case.
-    foreach ($sheet as $row) {
-        $row_lc = array_map("strtolower", $row);
-        $row_lc = array_map("trim", $row_lc);
-        foreach ($name_list as $name) {
-            $pos = array_search($name, $row_lc);
-            if ($pos !== FALSE) {
-                return $pos;
-            }
-        }
-    }
-    return FALSE; # Not found.
-}
-
-function read_box_quantity_override($reference)
-{
-    # Check if we have a box quantity override for this product,
-    # and return it, or FALSE otherwise.
-    global $dbh;
-    $sql = "SELECT override_box_quantity from tfc_special_stock_rules WHERE " .
-        " reference =? AND override_box_quantity IS NOT NULL";
-    $st = $dbh->prepare($sql);
-    $st->execute(Array($reference));
-    $rows = $st->fetchAll();
-    if (count($rows) > 0) {
-        return $rows[0][0];
-    } else {
-        return FALSE;
-    }
-}
-
 function do_process_stock()
 {
     global $dbh;
@@ -137,13 +30,9 @@ function do_process_stock()
     $fileinfo = $_FILES['file'];
     tfc_log_to_db($dbh, "delivery: filename=" . $fileinfo['name']);
     
-    $is_html = (strpos(strtolower($fileinfo['name']), '.htm') !== FALSE);
-    
-    if ($is_html) {
-        $ssreader = read_html_table($fileinfo['tmp_name']);
-    } else {
-        $ssreader = new SpreadsheetReader($fileinfo['tmp_name'], $fileinfo['name']);
-    }
+    $ssreader = read_spreadsheet_or_html($fileinfo['tmp_name'], $fileinfo['name']);
+
+    # Filter out rows with too few columns.
     $sheet = Array();
     foreach ($ssreader as $row) {
         # Check the number of columns. Minimum will be 4
