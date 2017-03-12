@@ -21,7 +21,7 @@ $product_categories = get_product_categories();
     </p>
     <p>
         Markup (percent)
-        <input size="5" maxlength="5" name="markup" value="33.0">
+        <input size="5" maxlength="5" name="markup" value="35.0">
     </p>
     <p>
         File <input type="file" name="file"> - must be in 
