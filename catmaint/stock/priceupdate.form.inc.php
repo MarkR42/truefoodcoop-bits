@@ -29,8 +29,8 @@ $product_categories = get_product_categories();
     </p>
 
     <p>
-        Categories... <button type="button" id="cats_all">All</button>
-            <button type="button" id="cats_none">None</button>
+        Categories... 
+        <?php require('allornone.inc.php'); ?>
     </p>
     <p>
         <?php
@@ -65,23 +65,4 @@ $product_categories = get_product_categories();
 </form>
 <p><a href="./">Back to menu</a></p>
 
-<script>
-/*
- * Make the "check all" and "check none" buttons work...
- */
-function check_all(on)
-{
-    var cbs = document.querySelectorAll("input[type=checkbox]");
-    for (var i=0; i< cbs.length; i++) {
-        cbs[i].checked = on;
-    }
-}
-
-document.getElementById("cats_all").addEventListener("click",
-    function() { check_all(true); } );
-document.getElementById("cats_none").addEventListener("click",
-    function() { check_all(false); } );
-    
-
-</script>    
 </body>

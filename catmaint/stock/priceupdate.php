@@ -14,6 +14,9 @@ if (isset($_POST['process'])) {
 } elseif (isset($_POST['checkrefs'])) {
     $check_data = do_check_references();
     require('checkrefs.summary.inc.php');
+} elseif (isset($_POST['update'])) {
+    $reprice_info = do_price_update();
+    require('priceupdate.updated.inc.php');    
 }else {
     // Show form.
     require('priceupdate.form.inc.php');
@@ -60,9 +63,8 @@ function correct_sell_price($price)
 
 function price_is_close($p1, $p2)
 {
-    $p1_m = (int) ($p1 * 1000.0);
-    $p2_m = (int) ($p2 * 1000.0);
-    return ($p1_m == $p2_m);
+    $diff = $p2 - $p1;
+    return ( abs($diff) < 0.005 );
 }
 
 function do_process_prices()
@@ -249,6 +251,97 @@ function do_check_references()
         'missing_codes' => $missing_codes_list
     );
     return $check_data;
+}
+
+
+function generate_stock_move($reprice_location_id, $reference)
+{
+    global $dbh;
+    $st = $dbh->prepare(
+        "INSERT INTO stockdiary " .
+        " (id, datenew, reason, location, product, units, price) " .
+        " VALUES " .
+        " (uuid(), now(), -4, ?, (select ID from products where reference=?), ?, 0) ");
+    # Generate two stock moves with inverse units, so that the sum
+    # is zero.
+    $st->execute( Array($reprice_location_id, $reference, 1 ) );
+    $st->execute( Array($reprice_location_id, $reference, -1 ) );
+}
+
+function do_price_update()
+{
+    /*
+     * User pressed button. Actually do the price update. 
+     */
+    global $dbh;
+    check_post_token();
+    # iterate through the POST keys. 
+    # e.g. buyprice_531080;;INF
+    # sellprice_531080;;INF
+    # containing product references.
+    #
+    # THere is also a post parameter:
+    # update_sellprice[] 
+    # This contains a list of references where we should update the
+    # sell price. Only update the sell price if the ref is in 
+    # update_sellprice.
+    
+    # Get the reprice location id.
+    $row = $dbh->query("SELECT id from locations where name='reprice'")->fetch();
+    $reprice_location_id = $row[0];
+    if (! $reprice_location_id) {
+        throw new Exception("Cannot find reprice location");
+    }
+    
+    $update_sellprice = $_POST['update_sellprice'];
+    if (! is_array($update_sellprice)) {
+        $update_sellprice = Array();
+    }
+    $count_sellprices = 0;
+    $count_buyprices = 0;
+
+    $dbh->beginTransaction();
+    tfc_log_to_db($dbh, "Updating prices...");
+    foreach ($_POST as $key => $value) {
+        $prefix = "buyprice_";
+        # NOTE: strpos gives FALSE if not found.
+        if (strpos($key, $prefix) === 0) {
+            # Update buyprice
+            $reference = substr($key, strlen($prefix));
+            $buyprice = (float) $value;
+            if ($buyprice < 0.01) {
+                throw new Exception("Invalid buyprice $reference");
+            }
+            tfc_log_to_db($dbh, "Updating buy price: $reference to $buyprice");
+            $dbh->prepare("UPDATE products SET pricebuy=? WHERE reference=?")
+                ->execute(Array($buyprice, $reference));
+            $count_buyprices += 1;
+        }
+        $prefix = "sellprice_";
+        if (strpos($key, $prefix) === 0) {
+            # Update sell price
+            $reference = substr($key, strlen($prefix));
+            if (in_array($reference, $update_sellprice)) {
+                $sellprice = (float) $value;
+                if ($sellprice < 0.01) {
+                    throw new Exception("Invalid sellprice $reference");
+                }
+                tfc_log_to_db($dbh, "Updating sell price: $reference to $sellprice");
+                $dbh->prepare("UPDATE products SET pricesell=? WHERE reference=?")
+                    ->execute(Array($sellprice, $reference));
+                # Generate a dummy stock move 
+                generate_stock_move($reprice_location_id, $reference);
+                $count_sellprices += 1;
+            }
+        }
+    }
+    
+    tfc_log_to_db($dbh, "price update complete.");
+    $dbh->commit();
+    $reprice_info = Array(
+        'count_buyprices' => $count_buyprices,
+        'count_sellprices' => $count_sellprices);
+    return $reprice_info;
 }
     
 ?>

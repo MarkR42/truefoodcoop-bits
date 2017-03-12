@@ -66,6 +66,7 @@ input {
         Supplier code <input size="5" maxlength="5" name="supplier" value="<?php echo htmlspecialchars($supplier) ?>">
         Markup: <?php echo sprintf("%.1f", $markup) ?> %
     </p>
+    <p>Select: <?php require('allornone.inc.php'); ?> </p>
     <hr />
     <table>
         <thead>
@@ -87,7 +88,7 @@ input {
                 <th class="sellprice">Old inc </th>
                 <th class="sellprice_ex">New ex </th>
                 <th class="sellprice">New inc </th>
-                <th>dif</th>
+                <th>%dif</th>
                 <th>upd.</th>
                 <th>Name of product (supplier's)</th>
             </tr>
@@ -134,9 +135,14 @@ input {
                     </td>
                     <td>
                         <input type="hidden"
-                            name="update_buyprice[]"
-                            value="<?php echo htmlspecialchars($row['reference'])?>"
+                            name="buyprice_<?php echo htmlspecialchars($row['reference']) ?>"
+                            value="<?php echo $price_buy ?>"
                             >
+                        <input type="hidden"
+                            name="sellprice_<?php echo htmlspecialchars($row['reference']) ?>"
+                            value="<?php echo $new_price_sell ?>"
+                            >
+                            
                         <input type="checkbox" 
                             name="update_sellprice[]"
                             value="<?php echo htmlspecialchars($row['reference'])?>"
@@ -158,10 +164,22 @@ input {
     
     <hr />
     
-    <p>Check the above is correct, FIXME. </p>
+<?php
+    if ($counter > 1) {
+?>
+    <p>Check the above is correct, and select the checkboxes on
+        desired products to update the sell price. If the box is not
+        checked, then the price will not be changed.</p>
     <p>
-        <button  type="submit" name="update" value="YES">UPDATE PRICES</button>
+        <button  type="submit" name="update" value="UPDATE">UPDATE PRICES</button>
     </p>
+<?php
+    } else {
+?>
+    <p>No matching products to update.</p>
+<?php 
+    } // end if.
+?>
 </form>
 <p><a href="./">Back to menu</a> (cancel)</p>
     
