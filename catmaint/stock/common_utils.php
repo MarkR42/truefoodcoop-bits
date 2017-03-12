@@ -38,10 +38,10 @@ function get_all_valid_product_codes($supplier, $categories = FALSE)
     # Our product reference is e.g.
     # 3035;;INF                | Millet Flour gluten free 500g        
     # This function returns a dictionary of valid product codes
-    # mapped to the value 1
+    # mapped to a true value
     # Codes will be mapped to upper case (if they contain letters)
     global $dbh;
-    $sql = "SELECT reference, category from products WHERE " .
+    $sql = "SELECT reference, category, name from products WHERE " .
         " reference like ?";
     $st = $dbh->prepare($sql);
     # Ends with ;; then supplier code
@@ -52,11 +52,15 @@ function get_all_valid_product_codes($supplier, $categories = FALSE)
     foreach ($st->fetchAll() as $row) {
         $reference = $row[0];
         $category = $row[1];
+        $name = $row[2];
+        if (! $name) {
+            $name = 'Unnamed product'; # Ensure a true value.
+        }
         if (! $categories or in_array($category, $categories)) {
             # Strip off everything after ;
             $bits = explode(';', $reference);
             $code = strtoupper($bits[0]);
-            $valid_codes[$code] = 1;
+            $valid_codes[$code] = $name;
         }
     }
     return $valid_codes;

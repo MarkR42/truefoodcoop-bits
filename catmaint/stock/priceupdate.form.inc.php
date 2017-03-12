@@ -21,7 +21,7 @@ $product_categories = get_product_categories();
     </p>
     <p>
         Markup (percent)
-        <input size="5" maxlength="5" name="markup" value="33">
+        <input size="5" maxlength="5" name="markup" value="33.0">
     </p>
     <p>
         File <input type="file" name="file"> - must be in 
@@ -54,8 +54,14 @@ $product_categories = get_product_categories();
             }
         ?>
     </p>
-    <button  type="submit" name="process" value="YES">YES</button>
+    <p>
+    <button  type="submit" name="process" value="PROCESS">PROCESS</button>
     <span>(NB: There is a confirmation page. )</span>
+    </p>
+    <p>
+    <button type="submit" name="checkrefs" value="Check Refs">Check References</button>
+        do not update the prices - just check the references in the database.
+    </p>
 </form>
 <p><a href="./">Back to menu</a></p>
 
