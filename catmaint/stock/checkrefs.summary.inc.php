@@ -20,7 +20,9 @@
     data error in our database.</p>
 <ul>
     <?php 
-        foreach ($check_data['missing_codes'] as list($code, $name)) {
+        foreach ($check_data['missing_codes'] as $row) {
+            $code = $row[0];
+            $name = $row[1];
             $ref = $code . ";;" . $supplier;
             print("<li>" . htmlspecialchars($ref) . 
                 " " .
