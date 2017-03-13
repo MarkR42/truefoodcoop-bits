@@ -21,3 +21,10 @@ VALUES
     ('20520;;INF', 1),
     ('62030;;INF', 1);
     
+
+-- Liquids which are in 5L container but sold as a whole container,
+-- only 1 stock unit.
+INSERT IGNORE INTO tfc_special_stock_rules (reference, override_box_quantity)
+VALUES
+    ('HJ124;;SUM', 1),
+    ('DY595;;SUM', 1);
