@@ -46,14 +46,6 @@ function correct_sell_price($price)
     // exact number of pence.
     
     $round_pence = 1;
-    // Over 1.50? Round to nearest 5p.
-    if ($price > 1.49) {
-        $round_pence = 5;
-    }
-    // 3 quid or more? Round to nearest 10p.
-    if ($price > 2.99) {
-        $round_pence = 10;
-    }
     
     $pence = $price * 100;
     $pence = round($pence / $round_pence) * $round_pence;
