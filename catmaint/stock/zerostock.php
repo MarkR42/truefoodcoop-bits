@@ -16,10 +16,10 @@ function zero_the_stock() {
     # Update the current stock level for all products, in this location
     # to zero.
     $st = $dbh->prepare("UPDATE stockcurrent SET UNITS=0 WHERE location=?");
-    $st->execute( [$location] );
+    $st->execute( Array($location) );
     # Delete every stock movement (stockdiary) to/from this location.
     $st = $dbh->prepare("DELETE FROM stockdiary WHERE location=?");
-    $st->execute( [$location] );
+    $st->execute( Array($location) );
     show_message("STOCK ZERO DONE"); 
 }
 
