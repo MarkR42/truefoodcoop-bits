@@ -28,3 +28,28 @@ INSERT IGNORE INTO tfc_special_stock_rules (reference, override_box_quantity)
 VALUES
     ('HJ124;;SUM', 1),
     ('DY595;;SUM', 1);
+
+-- Items which we sell in multiple quantities *and* singles:
+
+
+-- Soya milks:
+INSERT IGNORE INTO tfc_special_stock_rules (reference,
+    take_stock_from_reference, take_stock_quantity)
+    
+VALUES
+('724605a;;INF', '724605;;INF', 6),
+('724610a;;INF', '724610;;INF', 6);
+
+-- Eggs
+-- Single = BCE05.003;;HAR
+-- Box of 6 = BAR001;;HAR
+-- box of 30 = BCE05.005;;HAR
+
+INSERT IGNORE INTO tfc_special_stock_rules (reference,
+    take_stock_from_reference, take_stock_quantity)
+    
+VALUES
+('BAR001;;HAR', 'BCE05.003;;HAR', 6),
+('BCE05.005;;HAR', 'BCE05.003;;HAR', 30);
+
+
