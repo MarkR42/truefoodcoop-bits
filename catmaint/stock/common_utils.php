@@ -13,10 +13,15 @@ function parse_box_qty($str) {
     # 10x250g
     # 10 x 250g
     # 10 X 250g
+    # 6x(3x105ml)
     
     $str = strtolower($str);
     # remove all whitespace, even internal.
     $str = str_replace(' ', '', $str);
+    # Remove brackets.
+    $str = str_replace('(', '', $str);
+    $str = str_replace(')', '', $str);
+    
     list($boxqty, $itemsize) = sscanf($str, '%fx%f');
     if (isset($itemsize)) {
         return $boxqty;

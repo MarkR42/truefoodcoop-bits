@@ -63,6 +63,7 @@ function do_process_prices()
 {
     global $dbh;
     check_post_token();
+    set_time_limit(180); # Maximum runtime of script from this point.
     $supplier = $_POST['supplier'];
     $markup_percent = (float) $_POST['markup'];
     $markup_factor = ($markup_percent + 100.0) / 100.0;
