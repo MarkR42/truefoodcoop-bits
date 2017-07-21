@@ -114,7 +114,7 @@ function do_process_prices()
     tfc_log_to_db($dbh, "Product code column is " . $column_product_code);
     # Find price column.
     $column_price = find_column_by_name($sheet,
-        Array('price', 'case price') );
+        Array('price', 'case price', 'trade price') );
     if ($column_price === FALSE) {
         $errors[] = log_and_return("Cannot find price column");
     }
