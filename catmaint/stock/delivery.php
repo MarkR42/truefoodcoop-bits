@@ -46,7 +46,7 @@ function do_process_stock()
     if (count($sheet) < 2) {
         $errors[] = log_and_return("Too few rows: " . count($sheet));
     }
-    error_log("rows: " . count($sheet));
+    # error_log("rows: " . count($sheet));
     
     # Scan the sheet to find various things.
     $box_qtys_by_column = Array();
@@ -63,7 +63,11 @@ function do_process_stock()
         }
         $widths = array_map("strlen", $row);
         $widest_index = array_highest_index($widths);
-        @ $widest_columns_by_column[$widest_index] += 1;
+        $widest_width = $widths[$widest_index];
+        # In the case of very sparse rows, do not count.
+        if ($widest_width > 2) {
+            @ $widest_columns_by_column[$widest_index] += 1;
+        }
     }
     $column_box_quantity = array_highest_index($box_qtys_by_column);
     tfc_log_to_db($dbh, "Box quantity column is " . $column_box_quantity);
@@ -162,6 +166,20 @@ function do_process_update()
     $dbh->beginTransaction();
     foreach ($amounts_to_update as $amount) {
         list ($product_code, $product_id, $qty) = $amount;
+        # If we have no record in stockcurrent, add one.
+        $stockcurrent_st = $dbh->prepare("SELECT COUNT(*) FROM stockcurrent" .
+            " WHERE product=? AND location=?");
+        $stockcurrent_st->execute(Array($product_id, $location));
+        $stockcurrent_row = $stockcurrent_st->fetch();
+        if ($stockcurrent_row[0]) {
+            # Stock already exists.
+        } else {
+            # Need to insert a new row.
+            # With initially zero stock, we will immediately update it.
+            $dbh->prepare("INSERT INTO stockcurrent (product, location, units) ".
+                " VALUES (?,?,0)")
+                ->execute(Array($product_id, $location));
+        }
         # Update the stock
         $dbh->prepare("UPDATE stockcurrent SET units = units + ? " .
             " WHERE product=? AND location = ?")
