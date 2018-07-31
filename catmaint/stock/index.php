@@ -32,6 +32,10 @@ if in doubt, please check with the shop manager or buyer.</p>
 <p><a href="prodmaint.php">Product maintenance</a>
     Find a product and delete its stock or the whole product.
 </p>
+<p><a href="catmaint.php">Category maintenance</a>
+    Move products between categories; see what products are in 
+    each category.
+</p>
 <p><a href="zerostock.php">Zero stock</a>
     Use this only once per year, if you are just about to do a
     whole shop stock take!

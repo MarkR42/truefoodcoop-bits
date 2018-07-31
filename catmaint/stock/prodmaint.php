@@ -2,6 +2,9 @@
 
 require('db_inc.php');
 
+# Cookie name for default destination category (for move)
+define('DEST_COOKIE', 'tfc_default_dest');
+
 $dbh = init_db_connection();
 
 $results = null;
@@ -20,8 +23,11 @@ if (isset($_POST['action'])) {
         } elseif ($action == 'delete') {
             do_delete_product($product_id);
             $message = 'PRODUCTS DELETED';
+        } elseif ($action == 'move') {
+            do_move_product($product_id, $_POST['dest_category']);
+            $message = 'PRODUCTS MOVED';
         } else {
-            throw Exception("Unknown action " . $action);
+            throw new Exception("Unknown action " . $action);
         }
     }
     show_message("$count $message"); exit();
@@ -30,8 +36,39 @@ if (isset($_POST['action'])) {
 if (isset($_GET['q'])) {
     # Do the search.
     $results = do_product_search($_GET['q']);
+    $category_search = false;
 }
 
+if (isset($_GET['category_id'])) {
+    # Show products by category
+    $results = find_products_by_category($_GET['category_id']);
+    $st = $dbh->prepare("SELECT name from categories WHERE id=?");
+    $st->execute(Array($_GET['category_id']));
+    $category_search = $st->fetchAll()[0][0];
+}
+
+$dest_categories = find_dest_categories();
+
+function find_products_by_category($category_id)
+{
+    global $dbh;
+    $sql = "SELECT p.id, p.reference, p.name, c.name AS catname from products AS p " .
+        " inner join categories c on p.category = c.id WHERE " .
+        " p.category=? ORDER BY p.name";
+    $st = $dbh->prepare($sql);
+    $st->execute( Array( $category_id ) );
+    return $st->fetchAll();
+}
+
+function find_dest_categories()
+{
+    # Return result set for destination categories
+    # (for move)
+    global $dbh;
+    $sql = "SELECT id, name FROM categories ORDER BY name";
+    $res = $dbh->query($sql)->fetchAll();
+    return $res;
+}
 
 function do_product_search($q) {
     global $dbh;
@@ -96,6 +133,21 @@ function do_delete_product($product_id)
     $st->execute( Array($product_id) );
 }
 
+function do_move_product($product_id, $dest_category_id) 
+{
+    global $dbh;
+    # Move to new category
+    $st = $dbh->prepare("UPDATE products SET category=? WHERE id=?");
+    $st->execute( Array($dest_category_id, $product_id) );    
+    global $done_a_move;
+    if (! isset($done_a_move)) {
+        $done_a_move = true;
+        # Set a cookie, but only first time.
+        $expire = time() + (3600 * 24);
+        setcookie(DEST_COOKIE, $dest_category_id, $expire);
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -104,13 +156,26 @@ function do_delete_product($product_id)
 </head>
 <body>
 <h1>TFC Stock- Product maintenance</h1>
-<h2>Search</h2>
-<form method="GET">
-    Product name, reference etc: 
-    <input name="q" 
-        value="<?php echo htmlspecialchars($_GET['q']) ?>"><!-- query -->
-    <input type="submit" name="search">
-</form>
+<?php
+
+if ( $category_search ) {
+    # Show category name heading;
+?>
+    <h2>Category: <?php echo htmlspecialchars($category_search); ?></h2>
+<?php 
+} else {
+    # Display search form.
+?>
+    <h2>Search</h2>
+    <form method="GET">
+        Product name, reference etc: 
+        <input name="q" 
+            value="<?php echo htmlspecialchars($_GET['q']) ?>"><!-- query -->
+        <input type="submit" name="search">
+    </form>
+<?php
+} # end if ($category_search)
+?>
 
 <form method="POST">
     <input type="hidden" name="dog" value="Spacey">
@@ -132,17 +197,21 @@ if (isset($results)) {
     <tbody>
 <?php
     foreach($results as $product) {
+        $pid = $product['id'];
 ?>
     <tr>
         <td>
             <label>
                 <input type="checkbox" name="product_ids[]" 
-                    value="<?php echo htmlspecialchars($product['id']) ?>">
+                    id="<?php echo htmlspecialchars($pid); ?>"
+                    value="<?php echo htmlspecialchars($pid) ?>">
                 <?php echo htmlspecialchars($product['reference']) ?>
             </label>
             </td>
         <td><?php echo htmlspecialchars($product['catname']) ?></td>
-        <td><?php echo htmlspecialchars($product['name']) ?></td>
+        <td style="padding-left: 1em">
+            <label for="<?php echo htmlspecialchars($pid); ?>"><?php echo htmlspecialchars($product['name']) ?></label>
+        </td>
     
     </tr>
 <?php 
@@ -152,6 +221,26 @@ if (isset($results)) {
 <?php
     if (count($results) > 0) {
 ?>
+<p>
+    To category: 
+    <select name="dest_category">
+<?php
+    $default_dest = $_COOKIE[DEST_COOKIE] or '';
+    
+    foreach ($dest_categories as $dest_category) {
+        $cid = $dest_category['id'];
+?>
+        <option value="<?php echo htmlspecialchars($cid); ?>"
+            <?php if ($cid == $default_dest) { echo(" selected=selected "); } ?>
+            >
+            <?php echo htmlspecialchars($dest_category['name']); ?>
+        </option>    
+<?php
+    } # end foreach
+?>
+    </select>
+    <button type="submit" name="action" value="move">Move selected products</button>
+</p>
 <p>
     <button type="submit" name="action" value="zero">ZERO PRODUCTS' STOCK</button>
     <button type="submit" name="action" value="delete">DELETE PRODUCTS</button>
