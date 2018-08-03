@@ -44,7 +44,8 @@ if (isset($_GET['category_id'])) {
     $results = find_products_by_category($_GET['category_id']);
     $st = $dbh->prepare("SELECT name from categories WHERE id=?");
     $st->execute(Array($_GET['category_id']));
-    $category_search = $st->fetchAll()[0][0];
+    $stuff = $st->fetchAll();
+    $category_search = $stuff[0][0];
 }
 
 $dest_categories = find_dest_categories();
