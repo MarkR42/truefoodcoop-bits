@@ -14,6 +14,8 @@ $dbh = init_db_connection();
 <h1>TFC Stock maintenance</h1>
 <p>Stock maintenance system is for authorised people only, 
 if in doubt, please check with the shop manager or buyer.</p>
+<p><a href="freshprices.php">Fruit and veg prices</a> - a quick
+    way to update the prices of fresh produce.</p>
 <p><a href="delivery.php">Upload delivery note</a>
     Take a supplier's delivery note, and add the stock listed.
     Needs a file upload.
