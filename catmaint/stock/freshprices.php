@@ -4,6 +4,80 @@ require('db_inc.php');
 
 $dbh = init_db_connection();
 
+# Define some reasonable bounds on prices.
+define('PRICE_MIN', 0.10);
+define('PRICE_MAX', 99.00); # Note that a few items are more than £10 / kg
+
+if (isset($_POST['update'])) {
+    check_post_token();
+    # Handle POST.
+    $update_summary = do_update_prices();
+    show_message("Update done");
+    exit();
+}
+
+function do_update_prices() {
+    global $dbh;
+    # POST PARAMETERS:
+    # price[productid]
+    # oldprice[productid]
+    #
+    # If price and oldprice are different (i.e. different amounts of pence)
+    # (we should convert them to floats and check the difference)
+    # (1.0 and 1.00 aren't different)
+    #
+    # IF price and oldprice are different, and the product id
+    # exists and is contained in the fresh categories, then 
+    # we update the price, and create summary data to display
+    # to the user.
+    $freshcats = find_fresh_categories(NULL);
+    $freshset = Array(); # Keys are category IDs.
+    foreach ($freshcats as $freshcat) {
+        $freshset[$freshcat['id']] = 1;
+    }
+    
+    # Loop through products
+    foreach (array_keys($_POST['price']) as $pid) {
+        # Get product info
+        $sql = "select name, pricesell, category from products " .
+            " WHERE id=?";
+        $st = $dbh->prepare($sql);
+        $st->execute( array($pid) );
+        $product_row = $st->fetch();
+        $product_category = $product_row['category'];
+        
+        if ( (! $product_category) or (! isset($freshset[$product_category] ) ) ) {
+            throw new Exception("Product in wrong category: " . print_r($product_row, True));
+        }
+        # Check product price is really different
+        $old_price = (float) $product_row['pricesell'];
+        $new_price = (float) $_POST['price'][$pid];
+        $prod_name = $product_row['name'];
+        $diff = abs($old_price - $new_price);
+        $summary = array();
+        if ($diff < 0.005) {
+            # trigger_error("Product price is very close to old price");
+        } else {
+            if (($new_price < PRICE_MIN) or ($new_price > PRICE_MAX)) {
+                trigger_error("Product $pid price is unreasonable: $new_price");
+            } else {
+                # Actually do the update.
+                $st = $dbh->prepare("UPDATE products set pricesell=? ".
+                    " WHERE id=?");
+                $st->execute(array($new_price, $pid) );                
+                tfc_log_to_db($dbh, "Fresh price update: from $old_price to $new_price product: $pid $prod_name");
+                $summary[] = array(
+                    'id' => $pid,
+                    'name' => $prod_name,
+                    'old_price' => $old_price,
+                    'new_price' => $new_price
+                    );
+            }
+        }
+    }
+    return $summary;
+}
+
 function find_fresh_categories($parent_id)
 {
     # Do an in-order traversal of the category tree, return it
@@ -124,6 +198,10 @@ $categories = find_fresh_categories(NULL);
     } // end foreach categories
 ?>
 </ul>
+</div>
+<div>
+<button type="submit" name="update" value="1">UPDATE PRICES</button>
+
 </div>
 <p><a href="./">Back to menu</a></p>
 </form>
