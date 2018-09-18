@@ -8,12 +8,16 @@ $dbh = init_db_connection();
 define('PRICE_MIN', 0.10);
 define('PRICE_MAX', 99.00); # Note that a few items are more than £10 / kg
 
+$update_summary = FALSE;
+
 if (isset($_POST['update'])) {
     check_post_token();
     # Handle POST.
     $update_summary = do_update_prices();
-    show_message("Update done");
-    exit();
+}
+
+function format_price($price) {
+    return sprintf("%.02f", $price);
 }
 
 function do_update_prices() {
@@ -37,6 +41,7 @@ function do_update_prices() {
     }
     
     # Loop through products
+    $summary = array();
     foreach (array_keys($_POST['price']) as $pid) {
         # Get product info
         $sql = "select name, pricesell, category from products " .
@@ -54,7 +59,6 @@ function do_update_prices() {
         $new_price = (float) $_POST['price'][$pid];
         $prod_name = $product_row['name'];
         $diff = abs($old_price - $new_price);
-        $summary = array();
         if ($diff < 0.005) {
             # trigger_error("Product price is very close to old price");
         } else {
@@ -140,6 +144,10 @@ $categories = find_fresh_categories(NULL);
 </head>
 <body>
 <h1>TFC Stock- Fresh produce prices</h1>
+
+<?php
+if (! $update_summary) {
+?>
 <form method="POST">
     <input type="hidden" name="dog" value="Spacey">
 
@@ -167,7 +175,7 @@ $categories = find_fresh_categories(NULL);
             $odd = (($count % 2) != 0) ? "odd" : "";
             $pid = $product['id'];
             $pname = $product['name'];
-            $price_str = sprintf("%.02f", $product['pricesell']);
+            $price_str = format_price($product['pricesell']);
             $priceid = "price" . $pid;
 ?>
             <li>
@@ -203,7 +211,35 @@ $categories = find_fresh_categories(NULL);
 <button type="submit" name="update" value="1">UPDATE PRICES</button>
 
 </div>
-<p><a href="./">Back to menu</a></p>
 </form>
-    
+<?php
+} else { # $update_summary contains update detials
+?>    
+<h2>Update summary:</h2>
+<table border="border">
+<thead>
+    <tr>
+        <th>Product</th>
+        <th>Old price</th>
+        <th>New price</th>
+    </tr>
+</thead>
+<tbody>
+<?php
+    foreach ($update_summary as $update) {
+?>
+<tr>
+    <td><?php echo htmlspecialchars($update['name']) ?></td>
+    <td><?php echo format_price($update['old_price']) ?></td>
+    <td><?php echo format_price($update['new_price']) ?></td>
+</tr>
+<?php
+    }
+?>
+</tbody>
+</table>
+<?php
+} # end if $update_summary
+?>
+<p><a href="./">Back to menu</a></p>
 </body>
