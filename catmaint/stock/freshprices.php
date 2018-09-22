@@ -89,15 +89,17 @@ function find_fresh_categories($parent_id)
     $fresh_categories = Array();
     global $dbh;
     if ($parent_id) {
-        # TODO: Find child categories
+        # Find child categories
         $sql = "select c.id, c.name from categories AS c ".
-            " WHERE parentid = ? ORDER BY name";
+            " WHERE parentid = ? AND parentid <> id ORDER BY name";
         $params = Array($parent_id);
     } else {
         # Find top-level fresh (fruit, veg) categories
+        # Or a category which is its own parent(?!)
+        # Exclude 07 Vegan / vegetarian categories.
         $sql = "select c.id, c.name from categories AS c " .
-            " WHERE c.parentid IS NULL and ( " .
-            " NAME like '%fruit%' or name like '%veg%'" .
+            " WHERE (c.parentid IS NULL OR c.parentid = c.id)  and ( " .
+            " NAME like '%fruit%' or name like '%veg%' AND name not like '07%' " .
             " ) order by name";
         $params = Array();
     }
