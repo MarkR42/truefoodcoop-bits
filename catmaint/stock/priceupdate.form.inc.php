@@ -42,7 +42,16 @@ $product_categories = get_product_categories();
             <label>
                 <input type="checkbox" name="categories[]"
                     value="<?php echo htmlspecialchars($prodcat['id']) ?>"
-                    <?php if ($prodcat['name'][0] != '4') { ?>
+                    <?php
+/*
+ * If the category is not a "loose foods", then select it by default.
+ * 
+ * "Loose foods" category starts with "4" or "04"
+ */
+                    ?>
+                    <?php 
+                    $catname = $prodcat['name'];
+                    if (($catname[0] != '4') && (substr($catname,0,2) != '04')) { ?>
                         checked="checked"
                     <?php } ?>
                     
