@@ -14,6 +14,9 @@ function parse_box_qty($str) {
     # 10 x 250g
     # 10 X 250g
     # 6x(3x105ml)
+    # Examples from Essential:
+    # 6 * 355g
+    # 10x15 (should parse as 10)
     
     $str = strtolower($str);
     # remove all whitespace, even internal.
@@ -22,7 +25,13 @@ function parse_box_qty($str) {
     $str = str_replace('(', '', $str);
     $str = str_replace(')', '', $str);
     
+    # Parse e.g.10x200g
     list($boxqty, $itemsize) = sscanf($str, '%fx%f');
+    if (isset($itemsize)) {
+        return $boxqty;
+    }
+    # Parse e.g. 10*250g
+    list($boxqty, $itemsize) = sscanf($str, '%f*%f');
     if (isset($itemsize)) {
         return $boxqty;
     }

@@ -61,7 +61,16 @@ function do_process_stock()
                 @ $valid_codes_by_column[$i] += 1;
             } 
         }
-        $widths = array_map("strlen", $row);
+        # Trim whitespace from all row
+        $trimmed = array_map("trim", $row);
+        # Remove any digit or punctuation, to avoid big timestamp
+        # columns triggering the name detection.
+        $chopped = Array();
+        foreach ($trimmed as $item) {
+            $chopped[] = preg_replace('/[\d,-:]/','',$item);
+        }
+        # Find widths after trimmed and chopped.
+        $widths = array_map("strlen", $chopped);
         $widest_index = array_highest_index($widths);
         $widest_width = $widths[$widest_index];
         # In the case of very sparse rows, do not count.
@@ -77,7 +86,7 @@ function do_process_stock()
     tfc_log_to_db($dbh, "Product code column is " . $column_product_code);
     # Find quantity column.
     $column_quantity = find_column_by_name($sheet,
-        Array('quantity picked', 'quantity', 'qty') );
+        Array('quantity picked', 'quantity', 'qty', 'qnty') );
     tfc_log_to_db($dbh, "Quantity column is " . $column_quantity);
     # Build a data structure:
     # Array of: Arrays, elements:
@@ -90,6 +99,8 @@ function do_process_stock()
         $product_code = $row[$column_product_code];
         $product_code = trim((string) $product_code);
         $box_quantity = parse_box_qty($row[$column_box_quantity]);
+        # Default to 1 box quantity if unparseable.
+        if (! $box_quantity) $box_quantity = 1;
         $reference = $product_code . ';;' . $supplier;
         $box_quantity_override = read_box_quantity_override($reference);
         if ($box_quantity_override) {
