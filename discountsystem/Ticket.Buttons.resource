@@ -22,7 +22,7 @@
 <configuration>
     <button key="button.print" titlekey="button.print" template="Printer.TicketPreview"/>
     <button key="button.opendrawer" titlekey="button.opendrawer" template="Printer.OpenDrawer"/>
-    <!-- <event key="ticket.change" code="event.change"/> -->
+    <event key="ticket.change" code="event.tfcchange"/>
     <event key="ticket.addline" code="event.tfcaddline"/>
     <!-- <event key="ticket.removeline" code="event.removeline"/> -->
     <!-- <event key="ticket.setline" code="event.setline"/> -->
@@ -31,7 +31,7 @@
     <!-- <event key="ticket.close" code="event.close"/> -->   
     <img-width value="130"/>
     <img-height value="40"/>
-    <cat-height value="150"/>
+    <cat-height value="220"/>
     <taxesincluded value="true"/>   
     <!-- <printselected value="true"/> -->    
     <!-- <taxcategoryid value="001"/> -->

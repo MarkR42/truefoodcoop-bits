@@ -15,6 +15,13 @@ if (line.getProperty("tfc.voucher") != null) {
 			ticket.removeLine(i);
 		}
 	}
+    // Check that we are NOT a named customer
+    if (ticket.customer != null) {
+        JOptionPane.showMessageDialog(null, "Discount vouchers cannot be used for named customers",
+                "Voucher not accepted.", 
+				JOptionPane.PLAIN_MESSAGE);
+        return 1;
+    }
 	// Get current time, check not expired.
 	fmt = new SimpleDateFormat("yyyy-MM-dd");
 	String datestr = fmt.format(new Date());
