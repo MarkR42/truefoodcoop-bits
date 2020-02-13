@@ -34,6 +34,7 @@ if in doubt, please check with the shop manager or buyer.</p>
 <p><a href="active_members.php">Active members update</a>
     This page sets up the discounts for next month's discounts.
 </p>
+<p><a href="active_members_list.php">Active members list</a>
 <h2>Seldom needed</h2>
 <p><a href="prodmaint.php">Product maintenance</a>
     Find a product and delete its stock or the whole product.

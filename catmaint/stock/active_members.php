@@ -5,6 +5,8 @@ require('SpreadsheetReader.php');
 require('common_utils.php');
 
 $dbh = init_db_connection();
+
+$updated_count = 0;
 # Current dates for default form value
 $current_datebits = getdate();
 $current_year = $current_datebits['year'];
@@ -81,44 +83,22 @@ function do_update_active_members()
     
     $ssreader = new SpreadsheetReader($fileinfo['tmp_name'], $fileinfo['name']);
     # error_log("SSReader: " . print_r($fileinfo, true) );
+    global $updated_count;
+    $updated_count = 0;
     foreach ($ssreader as $row) {
         $member_id = (int) $row[0];
         if ($member_id > 0) {
             $member_name = $row[1];
             $member_discount = (int) $row[2];
             update_member_discount($year, $month, $member_id, $member_name, $member_discount);
+            $updated_count += 1;
         }
     }
-    throw new Exception("TODO");
+}
+
+if ($updated_count) {
+    require('active_members.summary.inc.php');
+} else {
+    require('active_members.form.inc.php');
 }
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-<title>TFC Active members</title>
-<style>
-</style>
-</head>
-<body>
-<h1>TFC Active members update</h1>
-<p>For more information, please see this <a href="activemembers-example.xlsx">Example spreadsheet</a></p>
-
-<form METHOD="POST" enctype="multipart/form-data">
-    <input type="hidden" name="dog" value="Spacey">
-    <p>
-        YEAR <input size="5" maxlength="5" name="year" value="<?php echo $form_year ?>"> 
-    </p>
-    <p>
-        MONTH <input size="5" maxlength="2" name="month" value="<?php echo $form_month ?>"> 
-    </p>
-    <p>
-        File <input type="file" name="file"> - must be in 
-            XLSX or CSV format. See example linked above.
-    </p>
-    <p>
-        <button type="submit" name="update">Update active members</button>
-    </p>
-
-</form>
-<p><a href="./">Back to menu</a></p>
-</body>
