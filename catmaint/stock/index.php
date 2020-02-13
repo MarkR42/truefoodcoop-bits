@@ -9,6 +9,7 @@ $dbh = init_db_connection();
 <html>
 <head>
 <title>TFC Stock maintenance</title>
+<script src="js/JsBarcode.all.js"></script>
 </head>
 <body>
 <h1>TFC Stock maintenance</h1>
@@ -29,7 +30,10 @@ if in doubt, please check with the shop manager or buyer.</p>
     Create some barcode numbers in the correct format, which are
     not already used in the database. 
 </p>
-
+<h1>Active members</h1>
+<p><a href="active_members.php">Active members update</a>
+    This page sets up the discounts for next month's discounts.
+</p>
 <h2>Seldom needed</h2>
 <p><a href="prodmaint.php">Product maintenance</a>
     Find a product and delete its stock or the whole product.
@@ -42,5 +46,7 @@ if in doubt, please check with the shop manager or buyer.</p>
     Use this only once per year, if you are just about to do a
     whole shop stock take!
 </p>
-
+<p>
+<canvas id="bctest" width="300" height="60"></canvas>
+</p>
 </body>
