@@ -32,6 +32,12 @@ $active_members = get_active_members();
     size:  auto;   /* auto is the initial value */
     margin: 0mm;  /* this affects the margin in the printer settings */
 }
+
+.codebox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 </style>
 </head>
 <body>
@@ -103,15 +109,19 @@ because they have ever been registered.</p>
         $col = ($count % 2);
         $row = (int) ($count / 2);
         
-        $x = ($cx + ($col * $card_width) - ($card_width / 2) );
-        $y = ($cy + ($row * $card_height) - ($card_height * 2) );
+        $x = ($cx + ($col * $card_width) - ($card_width * 1) );
+        $y = ($cy + ($row * $card_height) - ($card_height * 2.5) );
         
         $count += 1;
         ?>
+<div id="box-<?php echo htmlspecialchars($member['card']) ?>"
+    class="codebox"
+    style="width: 86mm; height:54mm; position:absolute; left: <?php echo $x ?>mm; top: <?php echo $y ?>mm">
 <canvas id="<?php echo htmlspecialchars($member['card']) ?>" 
     data-name="<?php echo htmlspecialchars($member['name']) ?>"
-    style="position:absolute; left: <?php echo $x ?>mm; top: <?php echo $y ?>mm"
+    style=""
 ></canvas>
+</div>
         <?php
     }
     if ($count == 0) {
@@ -123,26 +133,10 @@ because they have ever been registered.</p>
 <script>
 function dobarcodes()
 {
-    function pxtomm(n) {
-        // Web browser "pixels" are 96 per inch?
-        return (n / 96.0) * 25.4;
-    }
     for (var e of document.getElementsByTagName("canvas")) {
         var cardid = e.id;
         var name = e.getAttribute("data-name");
-        JsBarcode('#' + e.id, cardid, {'text':name, 'fontSize':12 });
-        // THese are in pixels
-        var w = e.width;
-        var h = e.height;
-        // These are in mm
-        var w_mm = pxtomm(w);
-        var h_mm = pxtomm(h);
-        var newx = parseFloat(e.style.left) - (w_mm / 2);
-        var newy = parseFloat(e.style.top) - (h_mm / 2);
-        // Move the element to be centred.
-        e.style.left = newx + 'mm';
-        e.style.top = newy + 'mm';
-        // e.style.border = "1px solid green";
+        JsBarcode('#' + e.id, cardid, {'text':name, 'fontSize':14});
     } 
 }
 window.addEventListener("load", dobarcodes);
