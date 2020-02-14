@@ -9,9 +9,11 @@ function get_active_members()
     global $dbh;
     # Find customers who have ':' in their
     # notes, which means they are probably active members.
+    # use "fax" - abused as date_created - as a sort key descending, 
+    # so we get the latest registered customers first.
     $sql = "SELECT searchkey, card, name, notes FROM customers " .
         " WHERE notes like '%:%' " .
-        " ORDER BY name";
+        " ORDER BY fax desc, name";
     $st = $dbh->prepare($sql);
     $st->execute( Array(  ) );
     return $st->fetchAll();    

@@ -35,10 +35,12 @@ function update_member_discount($year, $month, $member_id, $member_name, $member
 {
     global $dbh;
     # Create customer id if not already existing
+    # Abuse the "fax" field for date created.
+    $today = strftime('%Y-%m-%d');
     $card = sprintf("c%05d", $member_id);
-    $dbh->prepare("insert IGNORE into customers (id, searchkey, name, card, visible, notes) ".
-        " values (uuid(), ?, ?, ?, 1, 'YEAR-MONTH:DISCOUNTPERCENT')")
-        ->execute(Array($member_id, $member_name, $card));
+    $dbh->prepare("insert IGNORE into customers (id, searchkey, name, card, visible, notes, fax) ".
+        " values (uuid(), ?, ?, ?, 1, 'YEAR-MONTH:DISCOUNTPERCENT', ?)")
+        ->execute(Array($member_id, $member_name, $card, $today));
     # Get their notes
     $sql = "SELECT notes FROM customers WHERE " .
             " searchkey=?";
