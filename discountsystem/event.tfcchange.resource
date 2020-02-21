@@ -38,15 +38,21 @@ if (ticket.customer != null) {
         }
 
         // Add discount line
-        discountLine = new com.openbravo.pos.ticket.TicketLineInfo();
-        discountLine.setProperty("tfc.voucher", "customer");
-        discountLine.setProperty("product.name", "ActiveMember Discount");
-        discountLine.setProperty("product.taxcategoryid", "000");// no tax
-        discountLine.setMultiply(1.0);
+        // Set this to the product ID of the members specific discount voucher.
+        // Must be set correctly for back-end reporting.
+        PRODUCT_ID_DISCOUNT = "32efea27-585d-4877-bb3e-260b47268414";
+
         discountAmount = (discount * -0.01) * ticket.getTotal();
-        System.out.println("discountAmount=" + discountAmount.toString());
         discountPence = Math.round(discountAmount * 100.0);
-        discountLine.setPrice(discountPence * 0.01);
+        discountRounded = discountPence * 0.01;
+
+        System.out.println("discountAmount=" + discountAmount.toString());
+        discountLine = new com.openbravo.pos.ticket.TicketLineInfo(
+            PRODUCT_ID_DISCOUNT, 1, discountRounded, null);
+        discountLine.setProperty("tfc.voucher", "customer");
+        discountLine.setProperty("tfc.discountPercent", discount.toString());
+        discountLine.setProperty("product.name", "ActiveDisc @" + discount.toString() + "%");
+        discountLine.setProperty("product.taxcategoryid", "000");// no tax
         // Do not add a zero-value discount.
         if (discountAmount < -0.01) {
             ticket.addLine(discountLine);
