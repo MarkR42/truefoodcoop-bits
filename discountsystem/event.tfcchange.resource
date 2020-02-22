@@ -40,7 +40,7 @@ if (ticket.customer != null) {
         // Add discount line
         // Set this to the product ID of the members specific discount voucher.
         // Must be set correctly for back-end reporting.
-        PRODUCT_ID_DISCOUNT = "32efea27-585d-4877-bb3e-260b47268414";
+        PRODUCT_ID_DISCOUNT = "bcb482e8-b32e-43a8-aad4-c4ef7d6fc9d6";
 
         discountAmount = (discount * -0.01) * ticket.getTotal();
         discountPence = Math.round(discountAmount * 100.0);
