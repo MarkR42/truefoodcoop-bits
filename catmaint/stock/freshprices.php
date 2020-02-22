@@ -119,7 +119,7 @@ function find_fresh_categories($parent_id)
 function get_products($category_id)
 {
     global $dbh;
-    $sql = "select id, reference, name, pricesell, isscale FROM products " .
+    $sql = "select id, reference, name, pricesell, ord(isscale) as isscale FROM products " .
         " WHERE category=? ORDER BY name";
     $st = $dbh->prepare($sql);
     $st->execute( Array($category_id) );
